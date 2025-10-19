@@ -19,7 +19,8 @@ import okhttp3.Response;
  */
 public class MongoGradeDataBase implements GradeDataBase {
     // Defining some constants.
-    private static final String API_URL = "https://grade-apis.panchen.ca";
+    private static final String API_URL = "https://grade-apis.panchen.ca"; 
+    //把请求发送到上述地址 后面跟着的是信息 是发送请求时的parameter
     private static final String CONTENT_TYPE = "Content-Type";
     private static final String APPLICATION_JSON = "application/json";
     private static final String STATUS_CODE = "status_code";
@@ -44,21 +45,25 @@ public class MongoGradeDataBase implements GradeDataBase {
         // Note: The API requires the course and username to be passed as query parameters.
         final OkHttpClient client = new OkHttpClient().newBuilder()
                 .build();
+        //上面的client负责发送请求
+        //下面的request包含发送请求的内容
         final Request request = new Request.Builder()
-                .url(String.format("%s/grade?course=%s&username=%s", API_URL, course, username))
-                .addHeader(TOKEN, getAPIToken())
+                .url(String.format("%s/grade?course=%s&username=%s", API_URL, course, username)) //把一些信息打包在url里
+                .addHeader(TOKEN, getAPIToken())//API token是你的认证信息
                 .addHeader(CONTENT_TYPE, APPLICATION_JSON)
-                .build();
+                .build();//build是用来创建这个request 但这个时候还没有发送到url的地址
 
         // Hint: look at the API documentation to understand what the response looks like.
         try {
-            final Response response = client.newCall(request).execute();
-            final JSONObject responseBody = new JSONObject(response.body().string());
+            final Response response = client.newCall(request).execute(); //把上面的request通过互联网发送到目标服务器 得到运行结果
+            final JSONObject responseBody = new JSONObject(response.body().string()); //得到的结果变成Jsonobject
+            //responseBody这个variable包含程序return给我的结果 API返还给我的数据包里包含的内容 比如username course grade
 
             if (responseBody.getInt(STATUS_CODE) == SUCCESS_CODE) {
-                final JSONObject grade = responseBody.getJSONObject(GRADE);
+                final JSONObject grade = responseBody.getJSONObject(GRADE);//数据包里的内容以jsonobject的格式assign给grade这个variable
+                //GRADE是key getJSONObject是找到这个key里面的sub JSONObject
                 return Grade.builder()
-                        .username(grade.getString(USERNAME))
+                        .username(grade.getString(USERNAME))//从数据包里提取想要的内容
                         .course(grade.getString(COURSE))
                         .grade(grade.getInt(GRADE))
                         .build();
